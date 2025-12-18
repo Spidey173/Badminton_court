@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CourtBook Pro - Multi-Resource Booking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
+            position: relative;
+        }
+
+        h1 {
+            color: white;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 20px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1em;
+        }
+
+        /* User info and logout */
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.9em;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: transparent;
+            border: none;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            margin-bottom: 30px;
+        }
+
+        .card h2 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        /* Booking Grid */
+        .booking-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 400px;
+            gap: 30px;
+        }
+
+        /* Date Selector */
+        .date-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .date-selector label {
+            color: white;
+            font-weight: 600;
+        }
+
+        .date-selector input {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+        }
+
+        /* Resource Grid */
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .resource-card {
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .resource-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,0.25);
+        }
+
+        .resource-card.selected {
+            border-color: white;
+            background: rgba(255,255,255,0.35);
+            box-shadow: 0 0 20px rgba(255,255,255,0.4);
+        }
+
+        .resource-card.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .resource-card.unavailable:hover {
+            transform: none;
+        }
+
+        .resource-type {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .indoor {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .outdoor {
+            background: #10b981;
+            color: white;
+        }
+
+        .resource-card h3 {
+            color: white;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .resource-price {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .availability-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .available {
+            background: #10b981;
+            color: white;
+        }
+
+        .unavailable-badge {
+            background: #ef4444;
+            color: white;
+        }
+
+        .partially-available {
+            background: #f59e0b;
+            color: white;
+        }
+
+        /* Time Slots */
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .time-slot {
+            padding: 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .time-slot:hover:not(.booked):not(.unavailable) {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .time-slot.selected {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+
+        .time-slot.booked {
+            background: rgba(239,68,68,0.3);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .time-slot.unavailable {
+            background: rgba(255,255,255,0.1);
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+
+        .time-slot.peak {
+            position: relative;
+        }
+
+        .time-slot.peak::after {
+            content: '🔥';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 0.7em;
+        }
+
+        /* Equipment and Coach Items */
+        .equipment-item, .coach-item {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .equipment-item:hover, .coach-item:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .equipment-info, .coach-info {
+            color: white;
+            flex: 1;
+        }
+
+        .equipment-info h4, .coach-info h4 {
+            font-size: 1em;
+            margin-bottom: 4px;
+        }
+
+        .equipment-info p, .coach-info p {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+
+        .qty-btn:hover:not(:disabled) {
+            transform: scale(1.1);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .qty-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .qty-display {
+            color: white;
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .coach-select {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .coach-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        /* Summary Panel */
+        .summary-panel {
+            position: sticky;
+            top: 20px;
+        }
+
+        .price-breakdown {
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .price-breakdown h3 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.95em;
+        }
+
+        .price-item:last-child {
+            border-bottom: none;
+        }
+
+        .price-item.total {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 10px;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .price-item.multiplier {
+            color: #fbbf24;
+            font-size: 0.85em;
+            font-style: italic;
+        }
+
+        .price-item.discount {
+            color: #10b981;
+            font-size: 0.85em;
+        }
+
+        /* Selected Resources */
+        .selected-resources {
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+
+        .selected-resources h3 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .selected-item {
+            background: rgba(255,255,255,0.3);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove-btn {
+            background: #ef4444;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #dc2626;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 5px 20px rgba(255,255,255,0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(255,255,255,0.5);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Booking History */
+        .booking-history {
+            display: grid;
+            gap: 15px;
+        }
+
+        .history-item {
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .booking-id {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .booking-date {
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+
+        .history-details {
+            display: grid;
+            gap: 8px;
+            font-size: 0.95em;
+        }
+
+        .history-detail {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: white;
+            padding: 40px;
+            opacity: 0.7;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            animation: scaleIn 0.3s ease;
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .checkmark {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #10b981;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s ease;
+        }
+
+        .checkmark::after {
+            content: '✓';
+            color: white;
+            font-size: 50px;
+        }
+
+        .multiplier-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #fbbf24;
+            color: #92400e;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        /* Duration Selector */
+        .duration-selector {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .duration-selector label {
+            color: white;
+            margin-right: 10px;
+            font-weight: 600;
+        }
+
+        .duration-selector select {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: none;
+            background: white;
+            color: #334155;
+            font-size: 0.9em;
+        }
+
+        /* Time slot group info */
+        .time-group-info {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9em;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .booking-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-panel {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .resource-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .user-info {
+                position: static;
+                justify-content: center;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏸 CourtBook Pro</h1>
+            {% if current_user.is_authenticated %}
+            <div class="user-info">
+                <span>Welcome, {{ current_user.username }}!</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            {% endif %}
+            <p class="subtitle">Multi-Resource Sports Booking Platform</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('booking')">New Booking</button>
+            <button class="tab" onclick="switchTab('history')">Booking History</button>
+        </div>
+
+        <!-- Booking Tab -->
+        <div id="bookingTab" class="tab-content active">
+            <!-- Date Selection -->
+            <div class="card">
+                <div class="date-selector">
+                    <label>Select Date:</label>
+                    <input type="date" id="bookingDate" onchange="updateAvailability()">
+                </div>
+            </div>
+
+            <!-- Main Booking Grid -->
+            <div class="booking-grid">
+                <!-- Left Column: Courts & Time -->
+                <div>
+                    <div class="card">
+                        <h2>🏟️ Select Court</h2>
+                        <div class="resource-grid" id="courtsGrid">
+                            <!-- Courts will be loaded here -->
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>⏰ Select Time Slot</h2>
+                        <div class="time-slots" id="timeSlots">
+                            <!-- Time slots will be loaded here -->
+                        </div>
+                        <div id="timeGroupInfo" class="time-group-info"></div>
+                    </div>
+                </div>
+
+                <!-- Middle Column: Equipment & Coaches -->
+                <div>
+                    <div class="card">
+                        <h2>🎾 Add Equipment</h2>
+                        <div id="equipmentList">
+                            <!-- Equipment will be loaded here -->
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>👨‍🏫 Add Coach (Optional)</h2>
+                        <div id="coachList">
+                            <!-- Coaches will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Summary -->
+                <div class="summary-panel">
+                    <div class="card">
+                        <h2>📋 Booking Summary</h2>
+                        <div class="selected-resources">
+                            <h3>Selected Resources</h3>
+                            <div id="selectedResources">
+                                <p style="color: rgba(255,255,255,0.7); text-align: center;">No resources selected</p>
+                            </div>
+                        </div>
+
+                        <div class="price-breakdown">
+                            <h3>Price Breakdown</h3>
+                            <div id="priceBreakdown">
+                                <div class="price-item">
+                                    <span>Total</span>
+                                    <span>₹0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="confirmBooking()" id="bookBtn" disabled>
+                            Confirm Booking
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="historyTab" class="tab-content">
+            <div class="card">
+                <h2>📜 Your Booking History</h2>
+                <div class="booking-history" id="bookingHistory">
+                    <div class="empty-state">
+                        <p>Loading booking history...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="checkmark"></div>
+            <h2>Booking Confirmed!</h2>
+            <p id="modalDetails"></p>
+            <button class="btn btn-primary" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let courts = [];
+        let equipment = [];
+        let coaches = [];
+        let timeSlots = [];
+        let bookings = [];
+        let bookedTimeSlots = {}; // Track booked time slots by court {courtId: [time1, time2, ...]}
+        let allBookings = []; // Store all bookings data
+
+        // Dynamic Pricing Configuration loaded from database
+        let pricingRules = {
+            peakHours: {
+                enabled: true,
+                multiplier: 1.5,
+                start: '18:00',
+                end: '21:00'
+            },
+            weekend: {
+                enabled: true,
+                multiplier: 1.3
+            },
+            indoor: {
+                enabled: true,
+                multiplier: 1.2
+            },
+            multipleHours: {
+                enabled: true,
+                discountPerHour: 0.1
+            },
+            bundle: {
+                enabled: true,
+                discount: 0.15,
+                minItems: 3
+            }
+        };
+
+        // State Management
+        let currentBooking = {
+            date: null,
+            court: null,
+            timeSlot: null,
+            equipment: {},
+            coach: null,
+            duration: 1 // Default 1 hour
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPricingRules();
+            loadData();
+            setTodayDate();
+        });
+
+        // Load pricing rules from database
+        async function loadPricingRules() {
+            try {
+                const response = await fetch('/api/pricing_rules');
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Update pricing rules with data from database
+                    if (data.peakHours) {
+                        pricingRules.peakHours.enabled = true;
+                        pricingRules.peakHours.multiplier = data.peakHours.multiplier || 1.5;
+                        pricingRules.peakHours.start = data.peakHours.start || '18:00';
+                        pricingRules.peakHours.end = data.peakHours.end || '21:00';
+                    }
+
+                    if (data.weekend) {
+                        pricingRules.weekend.enabled = true;
+                        pricingRules.weekend.multiplier = data.weekend.multiplier || 1.3;
+                    }
+
+                    if (data.indoor) {
+                        pricingRules.indoor.enabled = true;
+                        pricingRules.indoor.multiplier = data.indoor.multiplier || 1.2;
+                    }
+
+                    if (data.multipleHours) {
+                        pricingRules.multipleHours.enabled = true;
+                        pricingRules.multipleHours.discountPerHour = data.multipleHours.discountPerHour || 0.1;
+                    }
+
+                    if (data.bundle) {
+                        pricingRules.bundle.enabled = true;
+                        pricingRules.bundle.discount = data.bundle.discount || 0.15;
+                        pricingRules.bundle.minItems = data.bundle.minItems || 3;
+                    }
+
+                } else {
+                    console.warn('Could not load pricing rules from server, using defaults');
+                }
+            } catch (error) {
+                console.error('Error loading pricing rules:', error);
+                // Use default rules if API fails
+            }
+        }
+
+        // Set today's date as default
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('bookingDate').value = today;
+            currentBooking.date = today;
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            document.querySelector(`.tab[onclick*="${tabName}"]`).classList.add('active');
+
+            if (tabName === 'history') {
+                loadBookings();
+            }
+        }
+
+        // Load initial data from APIs
+        async function loadData() {
+            try {
+                // Load courts
+                const courtsResponse = await fetch('/api/courts');
+                courts = await courtsResponse.json();
+
+                // Load equipment
+                const equipmentResponse = await fetch('/api/equipment');
+                equipment = await equipmentResponse.json();
+
+                // Load coaches
+                const coachesResponse = await fetch('/api/coaches');
+                coaches = await coachesResponse.json();
+
+                // Load time slots
+                const timeSlotsResponse = await fetch('/api/timeslots');
+                timeSlots = await timeSlotsResponse.json();
+
+                // Initialize UI
+                renderCourts();
+                renderTimeSlots();
+                renderEquipment();
+                renderCoaches();
+
+                // Initial availability check
+                updateAvailability();
+                updateSummary();
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Failed to load data. Please refresh the page.');
+            }
+        }
+
+        // Load bookings from API
+        async function loadBookings() {
+            try {
+                const response = await fetch('/api/bookings');
+                if (response.ok) {
+                    allBookings = await response.json();
+                    renderBookingHistory();
+                } else {
+                    // Mock data for demo if API fails
+                    allBookings = [
+                        {
+                            id: 1001,
+                            date: new Date().toISOString().split('T')[0],
+                            time_slot: "18:00",
+                            duration: 2,
+                            court_id: 1,
+                            court: { name: "Court 1 - Indoor", type: "indoor" },
+                            equipment: [
+                                { name: "Badminton Racket", quantity: 2 },
+                                { name: "Shuttlecocks", quantity: 1 }
+                            ],
+                            coach: { name: "Coach Raj" },
+                            total_price: 2450
+                        }
+                    ];
+                    renderBookingHistory();
+                }
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                document.getElementById('bookingHistory').innerHTML = `
+                    <div class="empty-state">
+                        <p>Error loading booking history. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Update availability
+        async function updateAvailability() {
+            const dateInput = document.getElementById('bookingDate');
+            if (dateInput.value) {
+                currentBooking.date = dateInput.value;
+
+                // Reset booked time slots
+                bookedTimeSlots = {};
+
+                // Initialize structure for all courts
+                courts.forEach(court => {
+                    bookedTimeSlots[court.id] = [];
+                });
+
+                // Check availability for selected date
+                try {
+                    const response = await fetch(`/api/check_availability?date=${currentBooking.date}`);
+                    if (response.ok) {
+                        const availability = await response.json();
+
+                        // Update booked time slots from API response
+                        if (availability.booked_time_slots) {
+                            Object.keys(availability.booked_time_slots).forEach(courtId => {
+                                const courtIdInt = parseInt(courtId);
+                                if (availability.booked_time_slots[courtId]) {
+                                    bookedTimeSlots[courtIdInt] = availability.booked_time_slots[courtId];
+                                }
+                            });
+                        }
+
+                        // Also check all existing bookings for this date
+                        const bookingsForDate = allBookings.filter(booking =>
+                            booking.date === currentBooking.date
+                        );
+
+                        // Process each booking to mark time slots as booked
+                        bookingsForDate.forEach(booking => {
+                            if (booking.court_id && booking.time_slot && booking.duration) {
+                                const courtId = booking.court_id;
+                                const startSlot = booking.time_slot;
+                                const duration = booking.duration || 1;
+
+                                // Get all time slots for this booking
+                                const bookingSlots = getTimeSlotsForDuration(startSlot, duration);
+
+                                // Add all slots to bookedTimeSlots
+                                bookingSlots.forEach(slot => {
+                                    if (!bookedTimeSlots[courtId].includes(slot)) {
+                                        bookedTimeSlots[courtId].push(slot);
+                                    }
+                                });
+                            }
+                        });
+
+                        // Update court availability status
+                        updateCourtAvailability();
+
+                        // Update time slots UI if a court is selected
+                        if (currentBooking.court) {
+                            updateTimeSlotsForCourt(currentBooking.court.id);
+                        }
+
+                        // Update equipment availability
+                        if (availability.equipment_availability) {
+                            equipment.forEach(item => {
+                                const availableQty = availability.equipment_availability[item.id] || item.total_available;
+                                document.getElementById(`avail-${item.id}`).textContent = availableQty;
+
+                                // Update button states
+                                const currentQty = currentBooking.equipment[item.id] || 0;
+                                const plusBtn = document.querySelector(`button[onclick="changeEquipmentQty(${item.id}, 1)"]`);
+                                if (plusBtn) {
+                                    plusBtn.disabled = currentQty >= availableQty;
+                                }
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking availability:', error);
+                }
+
+                updateSummary();
+            }
+        }
+
+        // Update court availability display
+        function updateCourtAvailability() {
+            courts.forEach(court => {
+                const card = document.getElementById(`court-${court.id}`);
+                if (!card) return;
+
+                const badge = card.querySelector('.availability-badge');
+                const bookedSlots = bookedTimeSlots[court.id] || [];
+
+                // Check if court is fully booked (all time slots are booked)
+                const isFullyBooked = timeSlots.every(slot =>
+                    bookedSlots.includes(slot)
+                );
+
+                // Check if court has any bookings
+                const hasBookings = bookedSlots.length > 0;
+
+                if (isFullyBooked) {
+                    card.classList.add('unavailable');
+                    badge.className = 'availability-badge unavailable-badge';
+                    badge.textContent = 'Fully Booked';
+                } else if (hasBookings) {
+                    card.classList.remove('unavailable');
+                    badge.className = 'availability-badge partially-available';
+                    badge.textContent = 'Partially Booked';
+                } else {
+                    card.classList.remove('unavailable');
+                    badge.className = 'availability-badge available';
+                    badge.textContent = 'Available';
+                }
+            });
+        }
+
+        // Get time slots for a duration starting from a specific slot
+        function getTimeSlotsForDuration(startSlot, duration) {
+            const slots = [];
+            const startIndex = getTimeSlotIndex(startSlot);
+
+            if (startIndex === -1) return slots;
+
+            for (let i = 0; i < duration; i++) {
+                const slot = getTimeSlotAtIndex(startIndex + i);
+                if (slot) {
+                    slots.push(slot);
+                }
+            }
+
+            return slots;
+        }
+
+        // Update time slots display for a specific court
+        function updateTimeSlotsForCourt(courtId) {
+            const bookedSlots = bookedTimeSlots[courtId] || [];
+
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                const slotTime = slot.id.replace('slot-', '');
+                const isBooked = bookedSlots.includes(slotTime);
+
+                if (isBooked) {
+                    slot.classList.add('booked');
+                    slot.classList.remove('selected');
+                    slot.classList.remove('unavailable');
+                } else {
+                    slot.classList.remove('booked');
+                }
+            });
+        }
+
+        // Render courts
+        function renderCourts() {
+            const grid = document.getElementById('courtsGrid');
+            grid.innerHTML = courts.map(court => `
+                <div class="resource-card" id="court-${court.id}" onclick="selectCourt(${court.id})">
+                    <span class="resource-type ${court.type}">${court.type.toUpperCase()}</span>
+                    <div class="availability-badge available">Available</div>
+                    <h3>${court.name}</h3>
+                    <p style="color: rgba(255,255,255,0.8);">${court.type === 'indoor' ? 'Climate Controlled' : 'Open Air'}</p>
+                    <div class="resource-price">Base: ₹${court.base_price}/hr</div>
+                </div>
+            `).join('');
+        }
+
+        // Render time slots
+        function renderTimeSlots() {
+            const container = document.getElementById('timeSlots');
+            container.innerHTML = timeSlots.map(slot => {
+                const isPeak = isPeakHour(slot);
+                return `
+                    <div class="time-slot ${isPeak ? 'peak' : ''}" id="slot-${slot}" onclick="selectTimeSlot('${slot}')">
+                        ${slot}
+                        ${isPeak ? '<span class="multiplier-badge" style="font-size: 0.7em; margin-left: 5px;">PEAK</span>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Check if time is in peak hours
+        function isPeakHour(time) {
+            if (!time || !pricingRules.peakHours.enabled) return false;
+
+            const [hour, minute] = time.split(':').map(Number);
+            const timeInMinutes = hour * 60 + minute;
+
+            const [startHour, startMinute] = pricingRules.peakHours.start.split(':').map(Number);
+            const startTime = startHour * 60 + startMinute;
+
+            const [endHour, endMinute] = pricingRules.peakHours.end.split(':').map(Number);
+            const endTime = endHour * 60 + endMinute;
+
+            return timeInMinutes >= startTime && timeInMinutes < endTime;
+        }
+
+        // Check if date is weekend
+        function isWeekend(dateString) {
+            if (!dateString || !pricingRules.weekend.enabled) return false;
+
+            const date = new Date(dateString);
+            return date.getDay() === 0 || date.getDay() === 6; // 0 = Sunday, 6 = Saturday
+        }
+
+        // Get time slot index
+        function getTimeSlotIndex(time) {
+            return timeSlots.findIndex(slot => slot === time);
+        }
+
+        // Get time slot at index
+        function getTimeSlotAtIndex(index) {
+            return timeSlots[index];
+        }
+
+        // Check if time slots are available for multi-hour booking
+        function checkMultiHourAvailability(startSlot, duration, courtId) {
+            const startIndex = getTimeSlotIndex(startSlot);
+            if (startIndex === -1) return false;
+
+            // Check if we have enough consecutive slots
+            if (startIndex + duration > timeSlots.length) return false;
+
+            const bookedSlots = bookedTimeSlots[courtId] || [];
+
+            // Check each slot for availability
+            for (let i = 0; i < duration; i++) {
+                const slot = getTimeSlotAtIndex(startIndex + i);
+                if (!slot) return false;
+
+                // Check if slot is already booked
+                if (bookedSlots.includes(slot)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Select court
+        function selectCourt(courtId) {
+            const court = courts.find(c => c.id === courtId);
+            if (!court) return;
+
+            // Check if court is fully booked
+            const bookedSlots = bookedTimeSlots[courtId] || [];
+            const isFullyBooked = timeSlots.every(slot => bookedSlots.includes(slot));
+
+            if (isFullyBooked) {
+                alert('This court is fully booked for the selected date. Please choose another court or date.');
+                return;
+            }
+
+            document.querySelectorAll('.resource-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById(`court-${courtId}`).classList.add('selected');
+            currentBooking.court = court;
+
+            // Update time slots for selected court
+            updateTimeSlotsForCourt(courtId);
+
+            updateSummary();
+            showDurationSelector();
+        }
+
+        // Select time slot
+        function selectTimeSlot(slot) {
+            if (!currentBooking.court) {
+                alert('Please select a court first');
+                return;
+            }
+
+            // Check if slot is already booked for selected court
+            const bookedSlots = bookedTimeSlots[currentBooking.court.id] || [];
+            if (bookedSlots.includes(slot)) {
+                alert('This time slot is already booked for the selected court');
+                return;
+            }
+
+            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+            document.getElementById(`slot-${slot}`).classList.add('selected');
+            currentBooking.timeSlot = slot;
+
+            updateSummary();
+            showDurationSelector();
+        }
+
+        // Show duration selector
+        function showDurationSelector() {
+            if (!currentBooking.court || !currentBooking.timeSlot) return;
+
+            // Remove existing duration selector
+            const existing = document.querySelector('.duration-selector');
+            if (existing) existing.remove();
+
+            // Check max available duration
+            const startIndex = getTimeSlotIndex(currentBooking.timeSlot);
+            let maxDuration = 1;
+
+            for (let i = 1; i <= 3; i++) {
+                if (checkMultiHourAvailability(currentBooking.timeSlot, i, currentBooking.court.id)) {
+                    maxDuration = i;
+                } else {
+                    break;
+                }
+            }
+
+            // Add new duration selector
+            const timeSlotsContainer = document.querySelector('#timeSlots').parentElement;
+            const selector = document.createElement('div');
+            selector.className = 'duration-selector';
+
+            let optionsHtml = '';
+            for (let i = 1; i <= maxDuration; i++) {
+                optionsHtml += `<option value="${i}" ${i === currentBooking.duration ? 'selected' : ''}>${i} hour${i > 1 ? 's' : ''}</option>`;
+            }
+
+            selector.innerHTML = `
+                <label>Duration:</label>
+                <select id="durationSelect" onchange="updateDuration(this.value)">
+                    ${optionsHtml}
+                </select>
+                <span style="color: rgba(255,255,255,0.8); margin-left: 10px; font-size: 0.9em;">
+                    ${pricingRules.multipleHours.enabled ?
+                        `(Discount: ${pricingRules.multipleHours.discountPerHour * 100}% per additional hour)` :
+                        ''}
+                </span>
+            `;
+            timeSlotsContainer.appendChild(selector);
+
+            // Update time group info
+            updateTimeGroupInfo();
+        }
+
+        // Update duration
+        function updateDuration(duration) {
+            currentBooking.duration = parseInt(duration);
+            updateTimeGroupInfo();
+            updateSummary();
+        }
+
+        // Update time group information display
+        function updateTimeGroupInfo() {
+            const infoContainer = document.getElementById('timeGroupInfo');
+            if (!currentBooking.timeSlot || !currentBooking.duration) {
+                infoContainer.innerHTML = '';
+                return;
+            }
+
+            const startIndex = getTimeSlotIndex(currentBooking.timeSlot);
+            const selectedSlots = [];
+
+            for (let i = 0; i < currentBooking.duration; i++) {
+                const slot = getTimeSlotAtIndex(startIndex + i);
+                if (slot) {
+                    selectedSlots.push(slot);
+                }
+            }
+
+            if (selectedSlots.length > 1) {
+                infoContainer.innerHTML = `Selected time slots: ${selectedSlots.join(' → ')}`;
+            } else {
+                infoContainer.innerHTML = '';
+            }
+        }
+
+        // Render equipment
+        function renderEquipment() {
+            const container = document.getElementById('equipmentList');
+            container.innerHTML = equipment.map(item => `
+                <div class="equipment-item">
+                    <div class="equipment-info">
+                        <h4>${item.name}</h4>
+                        <p>₹${item.price}/hr • Available: <span id="avail-${item.id}">${item.available}</span></p>
+                    </div>
+                    <div class="quantity-control">
+                        <button class="qty-btn" onclick="changeEquipmentQty(${item.id}, -1)" disabled>−</button>
+                        <span class="qty-display" id="qty-${item.id}">0</span>
+                        <button class="qty-btn" onclick="changeEquipmentQty(${item.id}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Change equipment quantity
+        function changeEquipmentQty(equipId, delta) {
+            const current = currentBooking.equipment[equipId] || 0;
+            const item = equipment.find(e => e.id == equipId);
+
+            const available = item.available || item.total_available;
+            const newQty = Math.max(0, Math.min(available, current + delta));
+
+            if (newQty === 0) {
+                delete currentBooking.equipment[equipId];
+            } else {
+                currentBooking.equipment[equipId] = newQty;
+            }
+
+            document.getElementById(`qty-${equipId}`).textContent = newQty;
+
+            // Update button states
+            const minusBtn = document.querySelector(`button[onclick="changeEquipmentQty(${equipId}, -1)"]`);
+            const plusBtn = document.querySelector(`button[onclick="changeEquipmentQty(${equipId}, 1)"]`);
+
+            if (minusBtn) minusBtn.disabled = newQty <= 0;
+            if (plusBtn) plusBtn.disabled = newQty >= available;
+
+            updateSummary();
+        }
+
+        // Render coaches
+        function renderCoaches() {
+            const container = document.getElementById('coachList');
+            container.innerHTML = coaches.map(coach => `
+                <div class="coach-item">
+                    <div class="coach-info">
+                        <h4>${coach.name}</h4>
+                        <p>₹${coach.price}/hr • ${coach.specialization}</p>
+                    </div>
+                    <div class="coach-select">
+                        <input type="checkbox" class="coach-checkbox" id="coach-${coach.id}"
+                               onchange="selectCoach(${coach.id}, this.checked)">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Select coach
+        function selectCoach(coachId, checked) {
+            document.querySelectorAll('.coach-checkbox').forEach(cb => {
+                if (cb.id !== `coach-${coachId}`) cb.checked = false;
+            });
+
+            if (checked) {
+                const coach = coaches.find(c => c.id == coachId);
+                if (coach) {
+                    currentBooking.coach = coach;
+                }
+            } else {
+                currentBooking.coach = null;
+            }
+            updateSummary();
+        }
+
+        // Calculate price with dynamic rules
+        function calculatePrice() {
+            let breakdown = [];
+            let total = 0;
+
+            if (!currentBooking.court || !currentBooking.timeSlot) {
+                return { breakdown, total };
+            }
+
+            // Base court price
+            let courtPrice = currentBooking.court.base_price;
+            breakdown.push({ label: `${currentBooking.court.name} (Base)`, value: courtPrice });
+
+            // Apply multipliers
+            let multiplier = 1;
+            const appliedMultipliers = [];
+
+            // Peak hours multiplier
+            if (pricingRules.peakHours.enabled && isPeakHour(currentBooking.timeSlot)) {
+                multiplier *= pricingRules.peakHours.multiplier;
+                appliedMultipliers.push(`Peak Hours ×${pricingRules.peakHours.multiplier}`);
+            }
+
+            // Weekend multiplier
+            if (pricingRules.weekend.enabled && isWeekend(currentBooking.date)) {
+                multiplier *= pricingRules.weekend.multiplier;
+                appliedMultipliers.push(`Weekend ×${pricingRules.weekend.multiplier}`);
+            }
+
+            // Indoor multiplier
+            if (pricingRules.indoor.enabled && currentBooking.court.type === 'indoor') {
+                multiplier *= pricingRules.indoor.multiplier;
+                appliedMultipliers.push(`Indoor Premium ×${pricingRules.indoor.multiplier}`);
+            }
+
+            // Apply multiplier to court price
+            if (multiplier !== 1) {
+                const originalPrice = courtPrice;
+                courtPrice = Math.round(courtPrice * multiplier);
+                breakdown.push({
+                    label: `Applied Multipliers (×${multiplier.toFixed(2)})`,
+                    value: courtPrice - originalPrice,
+                    isMultiplier: true
+                });
+            }
+
+            breakdown.push({ label: 'Court Total', value: courtPrice });
+            total += courtPrice;
+
+            // Equipment calculation
+            let equipmentSubtotal = 0;
+            const equipmentItems = [];
+
+            for (const [equipId, qty] of Object.entries(currentBooking.equipment)) {
+                const item = equipment.find(e => e.id == equipId);
+                if (item && qty > 0) {
+                    const equipTotal = item.price * qty;
+                    equipmentItems.push({ item, qty, subtotal: equipTotal });
+                    equipmentSubtotal += equipTotal;
+                }
+            }
+
+            // Apply bundle discount if applicable
+            const equipmentCount = Object.values(currentBooking.equipment).reduce((a, b) => a + b, 0);
+            let equipmentTotal = equipmentSubtotal;
+
+            if (pricingRules.bundle.enabled && equipmentCount >= pricingRules.bundle.minItems) {
+                const discount = equipmentSubtotal * pricingRules.bundle.discount;
+                equipmentTotal = Math.round(equipmentSubtotal - discount);
+                appliedMultipliers.push(`Bundle Discount ${pricingRules.bundle.discount * 100}%`);
+
+                breakdown.push({
+                    label: `Equipment Bundle Discount (${pricingRules.bundle.discount * 100}%)`,
+                    value: -discount,
+                    isDiscount: true
+                });
+            }
+
+            if (equipmentItems.length > 0) {
+                equipmentItems.forEach(({ item, qty, subtotal }) => {
+                    breakdown.push({ label: `${item.name} (${qty}x)`, value: subtotal });
+                });
+                breakdown.push({ label: 'Equipment Total', value: equipmentTotal });
+                total += equipmentTotal;
+            }
+
+            // Coach
+            if (currentBooking.coach) {
+                breakdown.push({ label: currentBooking.coach.name, value: currentBooking.coach.price });
+                total += currentBooking.coach.price;
+            }
+
+            // Apply duration
+            total = Math.round(total * currentBooking.duration);
+            if (currentBooking.duration > 1) {
+                breakdown.push({
+                    label: `Duration (${currentBooking.duration} hours)`,
+                    value: total,
+                    isDuration: true
+                });
+
+                // Apply multi-hour discount if applicable
+                if (pricingRules.multipleHours.enabled && currentBooking.duration > 1) {
+                    const discountRate = (currentBooking.duration - 1) * pricingRules.multipleHours.discountPerHour;
+                    const discount = total * discountRate;
+                    total = Math.round(total - discount);
+                    appliedMultipliers.push(`Multi-hour Discount ${discountRate * 100}%`);
+
+                    breakdown.push({
+                        label: `Multi-hour Discount (${discountRate * 100}%)`,
+                        value: -discount,
+                        isDiscount: true
+                    });
+                }
+            }
+
+            // Final total
+            total = Math.max(0, total); // Ensure non-negative
+            breakdown.push({ label: 'Total', value: total, isTotal: true });
+
+            return { breakdown, total, appliedMultipliers };
+        }
+
+        // Update summary panel
+        function updateSummary() {
+            const priceResult = calculatePrice();
+            const selectedResources = document.getElementById('selectedResources');
+            const priceBreakdown = document.getElementById('priceBreakdown');
+            const bookBtn = document.getElementById('bookBtn');
+
+            // Update selected resources
+            let resourcesHtml = '';
+
+            if (currentBooking.court) {
+                let timeDisplay = currentBooking.timeSlot || 'Select time';
+                if (currentBooking.timeSlot && currentBooking.duration > 1) {
+                    const startIndex = getTimeSlotIndex(currentBooking.timeSlot);
+                    const endSlot = getTimeSlotAtIndex(startIndex + currentBooking.duration - 1);
+                    if (endSlot) {
+                        timeDisplay = `${currentBooking.timeSlot} → ${endSlot}`;
+                    }
+                }
+
+                resourcesHtml += `
+                    <div class="selected-item">
+                        <span>${currentBooking.court.name} (${timeDisplay})</span>
+                        <button class="remove-btn" onclick="removeCourt()">Remove</button>
+                    </div>
+                `;
+            }
+
+            for (const [equipId, qty] of Object.entries(currentBooking.equipment)) {
+                const item = equipment.find(e => e.id == equipId);
+                if (item && qty > 0) {
+                    resourcesHtml += `
+                        <div class="selected-item">
+                            <span>${item.name} (${qty}x)</span>
+                            <button class="remove-btn" onclick="removeEquipment(${equipId})">Remove</button>
+                        </div>
+                    `;
+                }
+            }
+
+            if (currentBooking.coach) {
+                resourcesHtml += `
+                    <div class="selected-item">
+                        <span>${currentBooking.coach.name}</span>
+                        <button class="remove-btn" onclick="removeCoach()">Remove</button>
+                    </div>
+                `;
+            }
+
+            if (!resourcesHtml) {
+                resourcesHtml = '<p style="color: rgba(255,255,255,0.7); text-align: center;">No resources selected</p>';
+            }
+
+            selectedResources.innerHTML = resourcesHtml;
+
+            // Update price breakdown
+            let priceHtml = '';
+            priceResult.breakdown.forEach(item => {
+                if (item.isMultiplier) {
+                    priceHtml += `<div class="price-item multiplier"><span>${item.label}</span><span>+₹${item.value}</span></div>`;
+                } else if (item.isDiscount) {
+                    priceHtml += `<div class="price-item discount"><span>${item.label}</span><span>-₹${Math.abs(item.value)}</span></div>`;
+                } else if (item.isDuration) {
+                    priceHtml += `<div class="price-item multiplier"><span>${item.label}</span><span>₹${item.value}</span></div>`;
+                } else if (item.isTotal) {
+                    priceHtml += `<div class="price-item total"><span>${item.label}</span><span>₹${item.value}</span></div>`;
+                } else {
+                    priceHtml += `<div class="price-item"><span>${item.label}</span><span>₹${item.value}</span></div>`;
+                }
+            });
+
+            priceBreakdown.innerHTML = priceHtml;
+
+            // Enable/disable book button
+            const canBook = currentBooking.court &&
+                          currentBooking.timeSlot &&
+                          currentBooking.duration &&
+                          checkMultiHourAvailability(currentBooking.timeSlot, currentBooking.duration, currentBooking.court.id);
+
+            bookBtn.disabled = !canBook;
+        }
+
+        // Remove court
+        function removeCourt() {
+            currentBooking.court = null;
+            document.querySelectorAll('.resource-card').forEach(c => c.classList.remove('selected'));
+            updateSummary();
+        }
+
+        // Remove equipment
+        function removeEquipment(equipId) {
+            delete currentBooking.equipment[equipId];
+            document.getElementById(`qty-${equipId}`).textContent = '0';
+            updateSummary();
+        }
+
+        // Remove coach
+        function removeCoach() {
+            currentBooking.coach = null;
+            document.querySelectorAll('.coach-checkbox').forEach(cb => cb.checked = false);
+            updateSummary();
+        }
+
+        // Render booking history
+        function renderBookingHistory() {
+            const container = document.getElementById('bookingHistory');
+
+            // Filter bookings for current user if needed
+            const userBookings = allBookings; // You might want to filter by user
+
+            if (!userBookings || userBookings.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>No bookings yet. Make your first booking!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = userBookings.map(booking => {
+                let timeDisplay = booking.time_slot;
+                if (booking.duration > 1) {
+                    const startIndex = getTimeSlotIndex(booking.time_slot);
+                    const endSlot = getTimeSlotAtIndex(startIndex + booking.duration - 1);
+                    if (endSlot) {
+                        timeDisplay = `${booking.time_slot} → ${endSlot}`;
+                    }
+                }
+
+                return `
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="booking-id">Booking #${booking.id}</div>
+                        <div class="booking-date">${booking.date} • ${timeDisplay}</div>
+                    </div>
+                    <div class="history-details">
+                        <div class="history-detail">
+                            <span>Court:</span>
+                            <span>${booking.court.name} (${booking.court.type})</span>
+                        </div>
+                        ${booking.equipment && booking.equipment.length > 0 ? `
+                        <div class="history-detail">
+                            <span>Equipment:</span>
+                            <span>${booking.equipment.map(e => `${e.name} (${e.quantity}x)`).join(', ')}</span>
+                        </div>
+                        ` : ''}
+                        ${booking.coach ? `
+                        <div class="history-detail">
+                            <span>Coach:</span>
+                            <span>${booking.coach.name}</span>
+                        </div>
+                        ` : ''}
+                        <div class="history-detail" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
+                            <span style="font-weight: 600;">Total:</span>
+                            <span style="font-weight: 600;">₹${booking.total_price}</span>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Confirm booking
+        async function confirmBooking() {
+            if (!currentBooking.court || !currentBooking.timeSlot) {
+                alert('Please select a court and time slot');
+                return;
+            }
+
+            // Validate multi-hour availability
+            if (!checkMultiHourAvailability(currentBooking.timeSlot, currentBooking.duration, currentBooking.court.id)) {
+                alert('Selected time slots are no longer available. Please refresh and try again.');
+                return;
+            }
+
+            const priceResult = calculatePrice();
+
+            // Prepare booking data - include all time slots for multi-hour booking
+            const timeSlotsForBooking = getTimeSlotsForDuration(currentBooking.timeSlot, currentBooking.duration);
+
+            const bookingData = {
+                date: currentBooking.date,
+                timeSlot: currentBooking.timeSlot,
+                timeSlots: timeSlotsForBooking, // Send all slots for multi-hour booking
+                court: { id: currentBooking.court.id },
+                equipment: currentBooking.equipment,
+                coach: currentBooking.coach ? { id: currentBooking.coach.id } : null,
+                totalPrice: priceResult.total,
+                duration: currentBooking.duration
+            };
+
+            try {
+                const response = await fetch('/api/bookings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    let timeDisplay = currentBooking.timeSlot;
+                    if (currentBooking.duration > 1) {
+                        const endSlot = getTimeSlotAtIndex(getTimeSlotIndex(currentBooking.timeSlot) + currentBooking.duration - 1);
+                        timeDisplay = `${currentBooking.timeSlot} → ${endSlot}`;
+                    }
+
+                    showSuccessModal(`Booking #${result.booking_id} confirmed!<br>Court: ${currentBooking.court.name}<br>Time: ${timeDisplay}<br>Total: ₹${priceResult.total}`);
+
+                    // Add to local bookings array
+                    allBookings.push({
+                        id: result.booking_id,
+                        date: currentBooking.date,
+                        time_slot: currentBooking.timeSlot,
+                        duration: currentBooking.duration,
+                        court_id: currentBooking.court.id,
+                        court: currentBooking.court,
+                        equipment: Object.entries(currentBooking.equipment).map(([id, qty]) => {
+                            const item = equipment.find(e => e.id == id);
+                            return { name: item.name, quantity: qty };
+                        }),
+                        coach: currentBooking.coach,
+                        total_price: priceResult.total
+                    });
+
+                    // Mark all time slots as booked
+                    timeSlotsForBooking.forEach(slot => {
+                        if (!bookedTimeSlots[currentBooking.court.id].includes(slot)) {
+                            bookedTimeSlots[currentBooking.court.id].push(slot);
+                        }
+                    });
+
+                    // Update court availability
+                    updateCourtAvailability();
+
+                    // Update time slots for selected court
+                    updateTimeSlotsForCourt(currentBooking.court.id);
+
+                    // Reset current booking
+                    currentBooking = {
+                        date: document.getElementById('bookingDate').value,
+                        court: null,
+                        timeSlot: null,
+                        equipment: {},
+                        coach: null,
+                        duration: 1
+                    };
+
+                    // Reset UI
+                    document.querySelectorAll('.resource-card').forEach(c => c.classList.remove('selected'));
+                    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                    document.querySelectorAll('.coach-checkbox').forEach(cb => cb.checked = false);
+                    equipment.forEach(item => {
+                        document.getElementById(`qty-${item.id}`).textContent = '0';
+                    });
+
+                    const durationSelector = document.querySelector('.duration-selector');
+                    if (durationSelector) durationSelector.remove();
+
+                    document.getElementById('timeGroupInfo').innerHTML = '';
+
+                    updateSummary();
+
+                    // Reload bookings if on history tab
+                    if (document.getElementById('historyTab').classList.contains('active')) {
+                        renderBookingHistory();
+                    }
+                } else {
+                    alert('Booking failed: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error confirming booking:', error);
+                alert('Error confirming booking. Please try again.');
+            }
+        }
+
+        // Show success modal
+        function showSuccessModal(message) {
+            const modal = document.getElementById('successModal');
+            const modalDetails = document.getElementById('modalDetails');
+
+            modalDetails.innerHTML = message;
+            modal.classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('active');
+        }
+
+        // Logout
+        function logout() {
+            window.location.href = '/logout';
+        }
+    </script>
+</body>
+</html>
